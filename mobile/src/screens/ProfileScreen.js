@@ -10,6 +10,8 @@ import {
   ScrollView,
   Dimensions,
   SafeAreaView,
+  Modal,
+  TextInput,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -20,6 +22,8 @@ const { width } = Dimensions.get('window');
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [editVisible, setEditVisible] = useState(false);
+  const [editData, setEditData] = useState({});
 
   useEffect(() => {
     const loadUser = async () => {
@@ -42,20 +46,14 @@ export default function ProfileScreen({ navigation }) {
       'Logout',
       'Are you sure you want to logout?',
       [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Logout',
           onPress: async () => {
             try {
               await AsyncStorage.removeItem('user');
               await AsyncStorage.removeItem('token');
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
+              navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
             } catch (error) {
               Alert.alert('Error', 'Failed to log out');
             }
@@ -65,6 +63,21 @@ export default function ProfileScreen({ navigation }) {
       ],
       { cancelable: true }
     );
+  };
+
+  const openEditModal = () => {
+    setEditData(user);
+    setEditVisible(true);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      await AsyncStorage.setItem('user', JSON.stringify(editData));
+      setUser(editData);
+      setEditVisible(false);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save profile');
+    }
   };
 
   if (loading) {
@@ -92,10 +105,7 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView 
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
@@ -107,10 +117,7 @@ export default function ProfileScreen({ navigation }) {
               }}
               style={styles.avatar}
             />
-            <TouchableOpacity 
-              style={styles.editAvatarButton}
-              onPress={() => navigation.navigate('EditProfile')}
-            >
+            <TouchableOpacity style={styles.editAvatarButton} onPress={openEditModal}>
               <Icon name="edit" size={18} color={theme.colors.white} />
             </TouchableOpacity>
           </View>
@@ -120,12 +127,10 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.email}>{user.email}</Text>
         </View>
 
-        
-
         {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Information</Text>
-          
+
           <View style={styles.infoCard}>
             <View style={styles.infoIcon}>
               <Icon name="email" size={20} color={theme.colors.primary} />
@@ -142,9 +147,7 @@ export default function ProfileScreen({ navigation }) {
             </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Phone</Text>
-              <Text style={styles.infoValue}>
-                {user.phoneNumber || 'Not provided'}
-              </Text>
+              <Text style={styles.infoValue}>{user.phoneNumber || 'Not provided'}</Text>
             </View>
           </View>
 
@@ -154,10 +157,7 @@ export default function ProfileScreen({ navigation }) {
             </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Member since</Text>
-              <Text style={styles.infoValue}>
-                {/* {new Date(user.createdAt).toLocaleDateString()} */}
-                {user.createdAt}
-              </Text>
+              <Text style={styles.infoValue}>{user.createdAt}</Text>
             </View>
           </View>
         </View>
@@ -165,11 +165,8 @@ export default function ProfileScreen({ navigation }) {
         {/* Actions Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Actions</Text>
-          
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('EditProfile')}
-          >
+
+          <TouchableOpacity style={styles.actionButton} onPress={openEditModal}>
             <View style={styles.actionButtonContent}>
               <View style={[styles.actionIcon, { backgroundColor: '#E3F2FD' }]}>
                 <Icon name="edit" size={22} color={theme.colors.primary} />
@@ -178,16 +175,10 @@ export default function ProfileScreen({ navigation }) {
             </View>
             <Icon name="chevron-right" size={24} color={theme.colors.gray} />
           </TouchableOpacity>
-
         </View>
 
-       
-
         {/* Logout Button */}
-        <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Icon name="logout" size={22} color="#F44336" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
@@ -196,6 +187,44 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.versionText}>App Version 1.0.0</Text>
         </View>
       </ScrollView>
+
+      {/* Edit Profile Modal */}
+      <Modal visible={editVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Profile</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="First Name"
+              value={editData.firstName}
+              onChangeText={(text) => setEditData({ ...editData, firstName: text })}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Last Name"
+              value={editData.lastName}
+              onChangeText={(text) => setEditData({ ...editData, lastName: text })}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Phone Number"
+              value={editData.phoneNumber || ''}
+              onChangeText={(text) => setEditData({ ...editData, phoneNumber: text })}
+              keyboardType="phone-pad"
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setEditVisible(false)}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile}>
+                <Text style={styles.saveText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -261,35 +290,6 @@ const styles = StyleSheet.create({
   },
   email: {
     fontSize: 16,
-    color: theme.colors.lightText,
-    fontFamily: theme.fonts.regular,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 30,
-  },
-  statCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    width: (width - 60) / 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-    marginVertical: 4,
-    fontFamily: theme.fonts.bold,
-  },
-  statLabel: {
-    fontSize: 12,
     color: theme.colors.lightText,
     fontFamily: theme.fonts.regular,
   },
@@ -411,5 +411,52 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.colors.lightText,
     fontFamily: theme.fonts.regular,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '90%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  cancelButton: {
+    marginRight: 10,
+  },
+  cancelText: {
+    color: '#777',
+    fontSize: 16,
+  },
+  saveButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  saveText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
