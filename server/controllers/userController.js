@@ -9,7 +9,7 @@ const { EMAIL_USER, EMAIL_PASS } = require("../config/env");
 exports.register = async (req, res) => {
   try {
     const { firstName, lastName, phoneNumber, email, password } = req.body;
-
+    console.log(req.body)
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email already in use" });

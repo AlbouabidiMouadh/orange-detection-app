@@ -22,8 +22,8 @@ import {theme} from '../styles/theme';
 const { width, height } = Dimensions.get('window');
 
 // Your backend URL (adjust to your server IP/port)
-// const API_URL = 'http://10.183.53.9:5000/api/user/signup';
-const API_URL = 'http://192.168.1.22:5000/api/user/signup';
+// const API_URL = 'http://10.183.53.9:5000/api/user/register';
+const API_URL = 'http://10.107.181.132:5000/api/user/register';
 
 export default function SignupScreen({navigation}) {
   const [firstName, setFirstName] = useState('');
@@ -89,11 +89,12 @@ export default function SignupScreen({navigation}) {
         phoneNumber,
         password,
       });
-
+console.log(res)
       Alert.alert('Success', 'Account created successfully! Please log in.');
       navigation.navigate('Login');
     } catch (error) {
       const msg = error.response?.data?.message || error.message;
+      console.log(error)
       Alert.alert('Signup Failed', msg);
     } finally {
       setLoading(false);

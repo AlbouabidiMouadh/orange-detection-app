@@ -20,8 +20,23 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
 // app.use(mongoSanitize());
 app.use(helmet());
-app.use(cors({ origin: "*", credentials: true })); // adjust origin for production
-app.use(compression());
+app.use(cors({ origin: "*" }));
+// app.use(compression());
+
+// Log incoming requests
+app.use((req, res, next) => {
+  const now = new Date().toISOString();
+  console.log(
+    `[${now}] ${req.method} ${req.originalUrl} from ${req.ip} ${
+      req.body ? `| Body: ${JSON.stringify(req.body)}` : ""
+    }`
+  );
+  next();
+});
+
+app.get("/test", (req, res) => {
+  res.send("✅ Server is reachable from your phone");
+});
 
 // Routes
 app.use("/api/user", userRoutes);
@@ -49,7 +64,7 @@ mongoose
 
 // Start server
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 Server running on ${PORT}`);
 });
 
 // Graceful shutdown

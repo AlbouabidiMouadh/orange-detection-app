@@ -22,7 +22,7 @@ import * as Permissions from 'react-native-permissions';
 import {theme} from '../styles/theme';
 
 const {width} = Dimensions.get('window');
-const BACKEND_URL = 'https://192.168.1.22:5000/api/history';
+const BACKEND_URL = 'http://192.168.1.22:5000/api/history';
 
 const ActionButton = ({onPress, iconName, text, description, disabled}) => (
   <TouchableOpacity
@@ -53,9 +53,10 @@ export default function HomeScreen({navigation}) {
     const loadUser = async () => {
       try {
         const storedUser = await AsyncStorage.getItem('user');
+        const storedToken = await AsyncStorage.getItem('token');
         if (storedUser) {
           const userData = JSON.parse(storedUser);
-          setUser(userData);
+          setUser({...userData, token: storedToken});
           setScanCount(24); // Placeholder - replace with actual data
         }
       } catch (err) {
@@ -66,24 +67,29 @@ export default function HomeScreen({navigation}) {
   }, []);
 
   const saveHistory = useCallback(
-    async (contentUrl, contentType, detectionResult, modelType) => {
+    async (contentUrl, contentType, detectionResult) => {
       if (!user) {
         Alert.alert('Error', 'Please log in to save history');
         return;
       }
 
       try {
-        await axios.post(`${BACKEND_URL}/history`, {
-          user: user.email,
-          contentType,
-          contentUrl,
-          result: detectionResult,
-          modelType, // Include model type in history
-          date: new Date().toISOString(),
-        });
+        await axios.post(
+          BACKEND_URL,
+          {
+            contentType: "image",
+            contentUrl: contentUrl,
+            result: `${detectionResult.predictedClass} ${detectionResult.confidence}%`,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+            },
+          },
+        );
         console.log('History saved successfully');
       } catch (err) {
-        console.error('Error saving history:', err.message);
+        console.error('Error saving history:', err);
       }
     },
     [user],
@@ -113,14 +119,14 @@ export default function HomeScreen({navigation}) {
       const formData = new FormData();
       formData.append('image', {
         uri,
-        type: 'image/jpeg', 
+        type: 'image/jpeg',
         name: 'upload.jpg',
       });
 
       const endpoint =
         model === 'apple'
-          ? 'http://192.168.1.22:5000/predict/fruit'
-          : 'http://192.168.1.22:5000/predict/leaf';
+          ? 'http://192.168.1.22:4000/predict/fruit'
+          : 'http://192.168.1.22:4000/predict/leaf';
 
       const response = await axios.post(endpoint, formData, {
         headers: {
@@ -135,7 +141,7 @@ export default function HomeScreen({navigation}) {
         confidence: detectionResult.confidence || 0,
       });
 
-      await saveHistory(uri, 'image', detectionResult, model);
+      await saveHistory(uri, 'image', detectionResult);
     } catch (err) {
       Alert.alert('Error', err.message || 'Failed to process image');
     } finally {

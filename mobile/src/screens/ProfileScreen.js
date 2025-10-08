@@ -198,17 +198,20 @@ export default function ProfileScreen({ navigation }) {
               style={styles.input}
               placeholder="First Name"
               value={editData.firstName}
+              placeholderTextColor={"gray"}
               onChangeText={(text) => setEditData({ ...editData, firstName: text })}
             />
             <TextInput
               style={styles.input}
               placeholder="Last Name"
               value={editData.lastName}
+              placeholderTextColor={"gray"}
               onChangeText={(text) => setEditData({ ...editData, lastName: text })}
             />
             <TextInput
               style={styles.input}
               placeholder="Phone Number"
+              placeholderTextColor={"gray"}
               value={editData.phoneNumber || ''}
               onChangeText={(text) => setEditData({ ...editData, phoneNumber: text })}
               keyboardType="phone-pad"

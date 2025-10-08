@@ -64,19 +64,17 @@ export default function HistoryScreen() {
   const getStatusColor = (result) => {
     if (result?.toLowerCase().includes('healthy')) {
       return '#4CAF50'; // Green for healthy
-    } else if (result?.toLowerCase().includes('disease') || result?.toLowerCase().includes('unhealthy')) {
+    } else  {
       return '#F44336'; // Red for diseases
     }
-    return '#FF9800'; // Orange for unknown/other
   };
 
   const getStatusIcon = (result) => {
     if (result?.toLowerCase().includes('healthy')) {
       return 'check-circle';
-    } else if (result?.toLowerCase().includes('disease') || result?.toLowerCase().includes('unhealthy')) {
+    } else  {
       return 'warning';
     }
-    return 'help';
   };
 
   const renderItem = ({item}) => (
@@ -102,8 +100,7 @@ export default function HistoryScreen() {
             style={styles.statusIcon}
           />
           <Text style={styles.statusText}>
-            {item.result?.toLowerCase().includes('healthy') ? 'Healthy' : 
-             item.result?.toLowerCase().includes('disease') ? 'Disease' : 'Unknown'}
+            {item.result?.toLowerCase().includes('healthy') ? 'Healthy' :'Disease' }
           </Text>
         </View>
       </View>
@@ -137,10 +134,10 @@ export default function HistoryScreen() {
         <Text style={styles.result} numberOfLines={2}>
           {item.result}
         </Text>
-        <TouchableOpacity style={styles.detailsButton}>
+        {/* <TouchableOpacity style={styles.detailsButton}>
           <Text style={styles.detailsText}>View Details</Text>
           <Icon name="chevron-right" size={18} color={theme.colors.primary} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </TouchableOpacity>
   );
@@ -165,7 +162,7 @@ export default function HistoryScreen() {
           </Text>
           <TouchableOpacity 
             style={styles.scanButton}
-            onPress={() => navigation.navigate('Home')}
+            onPress={() => navigation.navigate('HomeScreen')}
           >
             <Text style={styles.scanButtonText}>Start Scanning</Text>
           </TouchableOpacity>
