@@ -34,7 +34,7 @@ export default function HistoryScreen() {
       const user = await AsyncStorage.getItem('user');
       const parsedUser = user ? JSON.parse(user) : null;
       const token = await AsyncStorage.getItem('token');
-
+      console.log(parsedUser)
       if (!parsedUser) {
         Alert.alert('Error', 'No logged in user found');
         setLoading(false);
@@ -42,11 +42,12 @@ export default function HistoryScreen() {
       }
 
       // const response = await axios.get(`http://10.183.53.9:5000/api/history`, {
-      const response = await axios.get(`http://192.168.1.22:5000/api/history`, {
-        params: { userId: parsedUser._id },
+      const response = await axios.get(`http://192.168.1.23:5000/api/history/${parsedUser.id}`, {
+        params: { userId: parsedUser.id },
         headers: { Authorization: `Bearer ${token}` },
       });
       setHistory(response.data);
+      console.log(history)
     } catch (error) {
       console.error('Error fetching history:', error.message);
       Alert.alert('Error', 'Failed to load history');

@@ -5,7 +5,7 @@ const { authMiddleware } = require("../middlewares/auth");
 const router = express.Router();
 
 router.post("/", authMiddleware, saveHistory);
-router.get("/", authMiddleware, getUserHistory);
+router.get("/:userId", authMiddleware, getUserHistory);
 router.delete("/:id", authMiddleware, deleteHistory);
 
 module.exports = router;

@@ -23,10 +23,11 @@ exports.saveHistory = async (req, res) => {
 // Get all history of a user
 exports.getUserHistory = async (req, res) => {
   try {
-    const history = await History.find({ user: req.user.id })
+    console.log(req.params)
+    const history = await History.find({ user: req.params.userId })
       .sort({ createdAt: -1 })
       .populate("user", "firstName lastName email");
-
+console.log(history)
     res.json(history);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

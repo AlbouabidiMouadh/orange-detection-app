@@ -22,7 +22,7 @@ import * as Permissions from 'react-native-permissions';
 import {theme} from '../styles/theme';
 
 const {width} = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.1.22:5000/api/history';
+const BACKEND_URL = 'http://192.168.1.23:5000/api/history';
 
 const ActionButton = ({onPress, iconName, text, description, disabled}) => (
   <TouchableOpacity
@@ -125,8 +125,8 @@ export default function HomeScreen({navigation}) {
 
       const endpoint =
         model === 'apple'
-          ? 'http://192.168.1.22:4000/predict/fruit'
-          : 'http://192.168.1.22:4000/predict/leaf';
+          ? 'http://192.168.1.23:4000/predict/fruit'
+          : 'http://192.168.1.23:4000/predict/leaf';
 
       const response = await axios.post(endpoint, formData, {
         headers: {
