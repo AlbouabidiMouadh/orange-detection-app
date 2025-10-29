@@ -97,12 +97,24 @@ fruit_class_names = [
     "Rot_Apple",
     "Scab_Apple",
 ]
+fruit_traitements_names = [
+    "Myclobutanil or mancozeb",
+    "no traitements",
+    "Thyopanate-methyle or captan",
+    "captan or myclobutanil",
+]
 
 leaf_class_names = [
     "Apple___Apple_scab",
     "Apple___Black_rot",
     "Apple___Cedar_apple_rust",
     "Apple___healthy",
+]
+leaf_traitements_names = [
+    "captan or propiconazol",
+    "myclobutanil or tebucanozole",
+    "propiconazole or myclobutanil",
+    "no traitements",
 ]
 
 
@@ -116,14 +128,15 @@ def preprocess_image(image_bytes, target_size=(224, 224)):
 
 
 # ---------- Prediction helper ----------
-def get_prediction(model, class_names, image_bytes):
+def get_prediction(model, class_names, image_bytes, traitements_names):
     input_array = preprocess_image(image_bytes)
     prediction = model.predict(input_array)[0]
     probs = prediction.tolist()
     predicted_index = int(np.argmax(prediction))
     predicted_class = class_names[predicted_index]
+    traitement = traitements_names[predicted_index]
     confidence = round(100 * float(np.max(prediction)), 2)
-    return predicted_class, confidence, probs
+    return predicted_class, confidence, probs, traitement
 
 
 # ---------- Routes ----------
@@ -134,8 +147,8 @@ def predict_fruit():
             return jsonify({"error": "No image file provided"}), 400
 
         image_file = request.files["image"]
-        predicted_class, confidence, probs = get_prediction(
-            model_fruit, fruit_class_names, image_file.read()
+        predicted_class, confidence, probs, traitement = get_prediction(
+            model_fruit, fruit_class_names, image_file.read(), fruit_traitements_names
         )
 
         return jsonify(
@@ -143,6 +156,7 @@ def predict_fruit():
                 "predictedClass": predicted_class,
                 "confidence": confidence,
                 "probs": probs,
+                "traitement": traitement
             }
         )
     except Exception as e:
@@ -156,8 +170,8 @@ def predict_leaf():
             return jsonify({"error": "No image file provided"}), 400
 
         image_file = request.files["image"]
-        predicted_class, confidence, probs = get_prediction(
-            model_leaf, leaf_class_names, image_file.read()
+        predicted_class, confidence, probs, traitements = get_prediction(
+            model_leaf, leaf_class_names, image_file.read(), leaf_traitements_names
         )
 
         return jsonify(
@@ -165,6 +179,7 @@ def predict_leaf():
                 "predictedClass": predicted_class,
                 "confidence": confidence,
                 "probs": probs,
+                "traitements": traitements
             }
         )
     except Exception as e:

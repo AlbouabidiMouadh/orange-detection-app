@@ -24,7 +24,7 @@ const { width, height } = Dimensions.get('window');
 
 // Adjust this based on your backend URL
 // const API_URL = "http://10.183.53.9:5000/api/user";
-const API_URL = "http://192.168.1.23:5000/api/user";
+const API_URL = "http://10.23.130.218:5000/api/user";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');

@@ -22,7 +22,7 @@ import * as Permissions from 'react-native-permissions';
 import {theme} from '../styles/theme';
 
 const {width} = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.1.23:5000/api/history';
+const BACKEND_URL = 'http://10.23.130.218:5000/api/history';
 
 const ActionButton = ({onPress, iconName, text, description, disabled}) => (
   <TouchableOpacity
@@ -125,8 +125,8 @@ export default function HomeScreen({navigation}) {
 
       const endpoint =
         model === 'apple'
-          ? 'http://192.168.1.23:4000/predict/fruit'
-          : 'http://192.168.1.23:4000/predict/leaf';
+          ? 'http://10.23.130.218:4000/predict/fruit'
+          : 'http://10.23.130.218:4000/predict/leaf';
 
       const response = await axios.post(endpoint, formData, {
         headers: {
@@ -139,6 +139,7 @@ export default function HomeScreen({navigation}) {
       setResult({
         predictedClass: detectionResult.predictedClass || 'Unknown',
         confidence: detectionResult.confidence || 0,
+        traitements: detectionResult.traitements
       });
 
       await saveHistory(uri, 'image', detectionResult);
@@ -312,6 +313,9 @@ export default function HomeScreen({navigation}) {
               />
               <Text style={styles.resultText}>
                 {result.predictedClass} ({result.confidence}%)
+              </Text>
+              <Text style={styles.resultText}>
+                traitements: {result.traitements} 
               </Text>
             </View>
           </View>

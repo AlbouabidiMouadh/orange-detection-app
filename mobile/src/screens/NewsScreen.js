@@ -31,7 +31,7 @@ export default function NewsScreen({ navigation }) {
   const fetchNews = async () => {
     try {
       // const response = await axios.get("http://10.183.53.9:5000/api/news");
-      const response = await axios.get("http://192.168.1.22:5000/api/news");
+      const response = await axios.get("http://10.23.130.218:5000/api/news");
       setNews(response.data);
     } catch (error) {
       Alert.alert("Error", "Failed to load news articles");

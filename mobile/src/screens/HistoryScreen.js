@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -16,25 +16,38 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Video from 'react-native-video';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { theme } from '../styles/theme';
+import {theme} from '../styles/theme';
+import { useFocusEffect } from '@react-navigation/native';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
-export default function HistoryScreen() {
+export default function HistoryScreen({navigation}) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Screen focused — fetching history');
+      fetchHistory();
+    }, []),
+  );
+
+//   useEffect(() => {
+//   const unsubscribe = navigation.addListener('focus', () => {
+//     console.log('Screen focused');
+//     fetchHistory();
+//   });
+//   return unsubscribe; // clean up
+// }, [navigation]);
+
 
   const fetchHistory = async () => {
     try {
       const user = await AsyncStorage.getItem('user');
       const parsedUser = user ? JSON.parse(user) : null;
       const token = await AsyncStorage.getItem('token');
-      console.log(parsedUser)
+      console.log(parsedUser);
       if (!parsedUser) {
         Alert.alert('Error', 'No logged in user found');
         setLoading(false);
@@ -42,15 +55,21 @@ export default function HistoryScreen() {
       }
 
       // const response = await axios.get(`http://10.183.53.9:5000/api/history`, {
-      const response = await axios.get(`http://192.168.1.23:5000/api/history/${parsedUser.id}`, {
-        params: { userId: parsedUser.id },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `http://10.23.130.218:5000/api/history/${parsedUser.id}`,
+        {
+          params: {userId: parsedUser.id},
+          headers: {Authorization: `Bearer ${token}`},
+        },
+      );
       setHistory(response.data);
-      console.log(history)
+      console.log(history);
     } catch (error) {
-      console.error('Error fetching history:', error.message);
-      Alert.alert('Error', 'Failed to load history');
+      console.error('Error fetching history:', error);
+      const message = error.response
+        ? `Server error: ${error.response.status}`
+        : 'Network error. Please check your connection.';
+      Alert.alert('Error', message);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -62,86 +81,94 @@ export default function HistoryScreen() {
     fetchHistory();
   };
 
-  const getStatusColor = (result) => {
+  const getStatusColor = result => {
     if (result?.toLowerCase().includes('healthy')) {
       return '#4CAF50'; // Green for healthy
-    } else  {
+    } else {
       return '#F44336'; // Red for diseases
     }
   };
 
-  const getStatusIcon = (result) => {
+  const getStatusIcon = result => {
     if (result?.toLowerCase().includes('healthy')) {
       return 'check-circle';
-    } else  {
+    } else {
       return 'warning';
     }
   };
 
-  const renderItem = ({item}) => (
-    <TouchableOpacity 
-      style={styles.card}
-      activeOpacity={0.9}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.dateContainer}>
-          <Icon name="access-time" size={16} color="#666" />
-          <Text style={styles.date}>
-            {new Date(item.date).toLocaleDateString()}
-          </Text>
-          <Text style={styles.time}>
-            {new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </Text>
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.result) }]}>
-          <Icon 
-            name={getStatusIcon(item.result)} 
-            size={14} 
-            color="#fff" 
-            style={styles.statusIcon}
-          />
-          <Text style={styles.statusText}>
-            {item.result?.toLowerCase().includes('healthy') ? 'Healthy' :'Disease' }
-          </Text>
-        </View>
-      </View>
+  const renderItem = ({item}) => {
+    const dateObj = new Date(item.date);
 
-      <View style={styles.mediaContainer}>
-        {item.contentType === 'image' ? (
-          <Image 
-            source={{uri: item.contentUrl}} 
-            style={styles.media} 
-            resizeMode="cover"
-          />
-        ) : (
-          <Video
-            source={{uri: item.contentUrl}}
-            style={styles.media}
-            controls
-            resizeMode="cover"
-            paused={true}
-          />
-        )}
-        <View style={styles.mediaOverlay}>
-          <Icon 
-            name={item.contentType === 'image' ? 'photo' : 'videocam'} 
-            size={20} 
-            color="rgba(255,255,255,0.8)" 
-          />
+    return (
+      <TouchableOpacity style={styles.card} activeOpacity={0.9}>
+        <View style={styles.cardHeader}>
+          <View style={styles.dateContainer}>
+            <Icon name="access-time" size={16} color="#666" />
+            <Text style={styles.date}>{dateObj.toLocaleDateString()}</Text>
+            <Text style={styles.time}>
+              {dateObj.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.statusBadge,
+              {backgroundColor: getStatusColor(item.result)},
+            ]}>
+            <Icon
+              name={getStatusIcon(item.result)}
+              size={14}
+              color="#fff"
+              style={styles.statusIcon}
+            />
+            <Text style={styles.statusText}>
+              {item.result?.toLowerCase().includes('healthy')
+                ? 'Healthy'
+                : 'Disease'}
+            </Text>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.cardFooter}>
-        <Text style={styles.result} numberOfLines={2}>
-          {item.result}
-        </Text>
-        {/* <TouchableOpacity style={styles.detailsButton}>
+        <View style={styles.mediaContainer}>
+          {item.contentType === 'image' ? (
+            <Image
+              source={{uri: item.contentUrl}}
+              style={styles.media}
+              resizeMode="cover"
+            />
+          ) : (
+            <Video
+              source={{uri: item.contentUrl}}
+              style={styles.media}
+              controls
+              resizeMode="cover"
+              paused={true}
+            />
+          )}
+          <View style={styles.mediaOverlay}>
+            <Icon
+              name={item.contentType === 'image' ? 'photo' : 'videocam'}
+              size={20}
+              color="rgba(255,255,255,0.8)"
+            />
+          </View>
+        </View>
+
+        <View style={styles.cardFooter}>
+          <Text style={styles.result} numberOfLines={2}>
+            {item.result}
+          </Text>
+          {/* <TouchableOpacity style={styles.detailsButton}>
           <Text style={styles.detailsText}>View Details</Text>
           <Icon name="chevron-right" size={18} color={theme.colors.primary} />
         </TouchableOpacity> */}
-      </View>
-    </TouchableOpacity>
-  );
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
@@ -161,10 +188,9 @@ export default function HistoryScreen() {
           <Text style={styles.emptySubtitle}>
             Your apple health scans will appear here
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.scanButton}
-            onPress={() => navigation.navigate('HomeScreen')}
-          >
+            onPress={() => navigation.navigate('HomeScreen')}>
             <Text style={styles.scanButtonText}>Start Scanning</Text>
           </TouchableOpacity>
         </View>
@@ -183,9 +209,9 @@ export default function HistoryScreen() {
 
       <FlatList
         data={history}
-        keyExtractor={(item, index) => item._id || index.toString()}
+        keyExtractor={(item, index) => item._id ?? index.toString()}
         renderItem={renderItem}
-        contentContainerStyle={styles.list}
+        initialNumToRender={5}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -194,7 +220,6 @@ export default function HistoryScreen() {
             tintColor={theme.colors.primary}
           />
         }
-        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
@@ -280,7 +305,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
